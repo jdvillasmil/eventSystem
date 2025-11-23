@@ -1,0 +1,63 @@
+{
+  "security": {
+    "loadMethods": {
+      "sql": "SELECT\n  pmp.profile_id AS \"profileId\",\n  INITCAP(m.resource) AS \"objectName\",\n  m.action AS \"methodName\"\nFROM public.profile_method_permissions pmp\nJOIN public.methods m ON m.id = pmp.method_id\nWHERE pmp.allowed = TRUE"
+    }
+  },
+  "public": {
+    "getUserByUsername": {
+      "sql": "SELECT id, username, password_hash AS \"passwordHash\", profile_id AS \"profileId\"\nFROM public.users\nWHERE username = $1"
+    },
+    "createUser": {
+      "sql": "INSERT INTO public.users (username, password_hash, profile_id)\nVALUES ($1, $2, $3)\nRETURNING id"
+    },
+    "getUserById": {
+      "sql": "SELECT id, username, profile_id AS \"profileId\"\nFROM public.users\nWHERE id = $1"
+    }
+  },
+  "Events": {
+    "list": {
+      "sql": "SELECT * FROM events ORDER BY date ASC"
+    },
+    "get": {
+      "sql": "SELECT * FROM events WHERE id = $1"
+    },
+    "create": {
+      "sql": "INSERT INTO events (title, description, date, location_id, capacity, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *"
+    },
+    "update": {
+      "sql": "UPDATE events SET title=$2, description=$3, date=$4, location_id=$5, capacity=$6 WHERE id=$1 RETURNING *"
+    },
+    "delete": {
+      "sql": "DELETE FROM events WHERE id=$1"
+    }
+  },
+  "Registrations": {
+    "register": {
+      "sql": "INSERT INTO registrations (event_id, user_id, guest_name, guest_email) VALUES ($1, $2, $3, $4) RETURNING *"
+    },
+    "listAttendees": {
+      "sql": "SELECT * FROM registrations WHERE event_id = $1"
+    },
+    "checkIn": {
+      "sql": "UPDATE registrations SET status='CHECKED_IN' WHERE id=$1 RETURNING *"
+    },
+    "cancel": {
+      "sql": "UPDATE registrations SET status='CANCELLED' WHERE id=$1 RETURNING *"
+    }
+  },
+  "Reservations": {
+    "list": {
+      "sql": "SELECT r.*, l.name as location_name, e.title as event_title FROM reservations r JOIN locations l ON r.location_id = l.id LEFT JOIN events e ON r.event_id = e.id ORDER BY r.date ASC"
+    },
+    "create": {
+      "sql": "INSERT INTO reservations (location_id, event_id, date) VALUES ($1, $2, $3) RETURNING *"
+    },
+    "cancel": {
+      "sql": "UPDATE reservations SET status='CANCELLED' WHERE id=$1 RETURNING *"
+    },
+    "getLocations": {
+      "sql": "SELECT * FROM locations ORDER BY name"
+    }
+  }
+}

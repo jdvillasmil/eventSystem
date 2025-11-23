@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - eventSystem Back</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Iniciar sesion</h1>
+      <p>Usa el usuario demo que insertaste en la DB.</p>
+
+      <form id="loginForm" autocomplete="off" autocapitalize="off" spellcheck="false">
+
+        <label for="usernameReal">Usuario</label>
+        <input id="usernameReal" name="u"
+        placeholder=""
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        inputmode="text"
+        readonly 
+        />
+
+        <label for="passwordReal">Contraseña</label>
+        <input id="passwordReal" name="p" 
+        type="password"
+        placeholder=""
+        autocomplete="new-password" 
+        readonly 
+        />  
+
+        <button type="submit">Entrar</button>
+      </form>
+
+      <div class="status" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <script src="/js/login.js" defer></script>
+</body>
+
+</html>

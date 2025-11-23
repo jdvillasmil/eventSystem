@@ -1,0 +1,17 @@
+{
+  "secretEnv": "SESSION_SECRET",
+  "resave": false,
+  "saveUninitialized": false,
+  "cookie": {
+    "httpOnly": true,
+    "sameSite": "lax",
+    "secure": false,
+    "maxAgeMs": 1800000
+  },
+  "sessionShape": {
+    "userId": null,
+    "userName": null,
+    "profileId": null,
+    "status": "anonymous"
+  }
+}

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - eventSystem Back</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .grid {
+      display: grid;
+      gap: 12px
+    }
+
+    .cols {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px
+    }
+
+    .muted {
+      color: #9aa3af
+    }
+
+    .ok {
+      color: #10b981
+    }
+
+    .err {
+      color: #ef4444
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px
+    }
+
+    pre {
+      background: #0d1117;
+      color: #d1d5db;
+      padding: 10px;
+      border-radius: 8px;
+      overflow: auto
+    }
+
+    .tag {
+      font-size: 12px;
+      padding: .2rem .5rem;
+      border-radius: 999px;
+      background: #111827;
+      color: #9aa3af
+    }
+
+    .tag.ok {
+      background: #062015;
+      color: #10b981
+    }
+
+    .tag.err {
+      background: #2a0d0d;
+      color: #ef4444
+    }
+
+    .card h2 {
+      margin-top: 0
+    }
+
+    .small {
+      font-size: 12px
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap grid">
+    <!-- Estado de sesión -->
+    <div class="card">
+      <h1>Dashboard</h1>
+      <p id="status" class="muted">Cargando...</p>
+      <h3>Session data</h3>
+      <pre id="meDump">{}</pre>
+      <div class="row">
+        <button id="btnLogout">Logout</button>
+      </div>
+    </div>
+
+    <!-- Tester de Seguridad /api -->
+    <div class="card">
+      <h2>Security tester (/api)</h2>
+      <p class="muted small">Prueba rápida de permisos por <span class="mono">Objeto.Método</span> usando tu sesión
+        actual.</p>
+
+      <div class="grid cols">
+        <div>
+          <h3>Pruebas con botones</h3>
+          <div class="row">
+            <button data-tx="Users.me">Users.me</button>
+            <button data-tx="Events.list">Events.list</button>
+            <button data-tx="Events.create" data-params='[{"title":"Demo desde UI"}]'>Events.create</button>
+          </div>
+          <p class="small muted">Con ADMIN deben pasar todas. Con QA, <b>Events.create</b> debe dar <span
+              class="mono">FORBIDDEN</span>.</p>
+        </div>
+
+        <div>
+          <h3>Prueba libre</h3>
+          <label class="small">tx (Objeto.Método)</label>
+          <input id="tx" placeholder="Auth.reloadSecurity" />
+          <label class="small">params (array JSON)</label>
+          <textarea id="params">[]</textarea>
+          <div class="row">
+            <button id="btnSend">Enviar /api</button>
+            <span id="httpTag" class="tag">HTTP ?</span>
+            <span id="okTag" class="tag">ok ?</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Respuesta</h3>
+      <pre id="out">{}</pre>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js" defer></script>
+</body>
+
+</html>
