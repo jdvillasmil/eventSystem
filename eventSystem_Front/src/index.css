@@ -549,54 +549,6 @@ body {
   color: #4ade80;
 }
 
-.attendee-btn.checkin:hover {
-  background: rgba(34, 197, 94, 0.3);
-}
-
-.attendee-btn.cancel-reg {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-}
-
-.attendee-btn.cancel-reg:hover {
-  background: rgba(239, 68, 68, 0.3);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #64748b;
-}
-
-padding-top: 1rem;
-border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.action-btn {
-  flex: 1;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-}
-
-.action-btn.edit {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-}
-
-.action-btn.edit:hover {
-  background: rgba(59, 130, 246, 0.3);
-  color: #93c5fd;
-}
-
 .action-btn.delete {
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
