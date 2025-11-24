@@ -39,12 +39,14 @@ const EventsPage: React.FC = () => {
         date: string;
         location_id: number;
         capacity: number | "";
+        ticket_price: number | "";
     }>({
         title: "",
         description: "",
         date: "",
         location_id: 1,
-        capacity: 100
+        capacity: 100,
+        ticket_price: 0
     });
 
     // Form State for Registration
@@ -100,7 +102,7 @@ const EventsPage: React.FC = () => {
 
     const openCreateModal = () => {
         setEditingEvent(null);
-        setFormData({ title: "", description: "", date: "", location_id: 1, capacity: 100 });
+        setFormData({ title: "", description: "", date: "", location_id: 1, capacity: 100, ticket_price: 0 });
         setIsModalOpen(true);
     };
 
@@ -114,7 +116,8 @@ const EventsPage: React.FC = () => {
             description: evt.description || "",
             date: dateStr,
             location_id: evt.location_id,
-            capacity: evt.capacity
+            capacity: evt.capacity,
+            ticket_price: evt.ticket_price || 0
         });
         setIsModalOpen(true);
     };
@@ -195,6 +198,30 @@ const EventsPage: React.FC = () => {
         }
     };
 
+    const handleCollectPayment = async (attendee: any) => {
+        if (!selectedEvent) return;
+        const amount = selectedEvent.ticket_price || 0;
+
+        if (amount <= 0) {
+            alert("Este evento es gratuito o no tiene precio asignado.");
+            return;
+        }
+
+        if (!window.confirm(`¿Confirmar pago de $${amount} para ${attendee.guest_name}?`)) return;
+
+        try {
+            await Registrations.collectPayment({
+                id: attendee.id,
+                amount: amount,
+                event_id: selectedEvent.id,
+                guest_name: attendee.guest_name
+            });
+            await fetchAttendees(selectedEvent.id);
+        } catch (err) {
+            alert("Error al registrar pago");
+        }
+    };
+
     const handleCancelRegistration = async (registrationId: number) => {
         try {
             await Registrations.cancel({ id: registrationId });
@@ -218,6 +245,11 @@ const EventsPage: React.FC = () => {
         if (statusLower.includes("check")) return "Check-in";
         if (statusLower.includes("cancel")) return "Cancelado";
         return "Registrado";
+    };
+
+    const getPaymentStatusBadge = (status: string) => {
+        if (status === 'PAID') return <span className="status-badge checked-in">Pagado</span>;
+        return <span className="status-badge cancelled">Pendiente</span>;
     };
 
     if (!user) return null;
@@ -256,6 +288,7 @@ const EventsPage: React.FC = () => {
                                 <div className="event-meta">
                                     <span>📍 ID Lugar: {evt.location_id}</span>
                                     <span>👥 Capacidad: {evt.capacity}</span>
+                                    <span>💲 Precio: ${evt.ticket_price || 0}</span>
                                 </div>
 
                                 {/* Action Buttons */}
@@ -312,15 +345,28 @@ const EventsPage: React.FC = () => {
                                     required
                                 />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Capacidad</label>
-                                <input
-                                    type="number"
-                                    className="form-input"
-                                    value={formData.capacity}
-                                    onChange={e => setFormData({ ...formData, capacity: e.target.value === "" ? "" : Number(e.target.value) })}
-                                    required
-                                />
+                            <div className="form-group-row" style={{ display: "flex", gap: "1rem" }}>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label className="form-label">Capacidad</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={formData.capacity}
+                                        onChange={e => setFormData({ ...formData, capacity: e.target.value === "" ? "" : Number(e.target.value) })}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label className="form-label">Precio Ticket ($)</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={formData.ticket_price}
+                                        onChange={e => setFormData({ ...formData, ticket_price: e.target.value === "" ? "" : Number(e.target.value) })}
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                </div>
                             </div>
 
                             <div className="modal-actions">
@@ -397,6 +443,18 @@ const EventsPage: React.FC = () => {
                                             <div className="attendee-email">{attendee.guest_email || "Sin email"}</div>
                                         </div>
                                         <div className="attendee-actions">
+                                            {getPaymentStatusBadge(attendee.payment_status)}
+
+                                            {attendee.payment_status !== 'PAID' && (
+                                                <button
+                                                    className="attendee-btn"
+                                                    style={{ background: "#10b981", color: "white", border: "none" }}
+                                                    onClick={() => handleCollectPayment(attendee)}
+                                                >
+                                                    💲 Cobrar
+                                                </button>
+                                            )}
+
                                             <span className={`status-badge ${getStatusBadgeClass(attendee.status)}`}>
                                                 {getStatusText(attendee.status)}
                                             </span>

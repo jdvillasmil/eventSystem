@@ -23,10 +23,10 @@
       "sql": "SELECT * FROM events WHERE id = $1"
     },
     "create": {
-      "sql": "INSERT INTO events (title, description, date, location_id, capacity, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *"
+      "sql": "INSERT INTO events (title, description, date, location_id, capacity, created_by, ticket_price) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *"
     },
     "update": {
-      "sql": "UPDATE events SET title=$2, description=$3, date=$4, location_id=$5, capacity=$6 WHERE id=$1 RETURNING *"
+      "sql": "UPDATE events SET title=$2, description=$3, date=$4, location_id=$5, capacity=$6, ticket_price=$7 WHERE id=$1 RETURNING *"
     },
     "delete": {
       "sql": "DELETE FROM events WHERE id=$1"
@@ -34,13 +34,19 @@
   },
   "Registrations": {
     "register": {
-      "sql": "INSERT INTO registrations (event_id, user_id, guest_name, guest_email) VALUES ($1, $2, $3, $4) RETURNING *"
+      "sql": "INSERT INTO registrations (event_id, user_id, guest_name, guest_email, payment_status, amount_paid) VALUES ($1, $2, $3, $4, 'PENDING', 0) RETURNING *"
     },
     "listAttendees": {
       "sql": "SELECT * FROM registrations WHERE event_id = $1"
     },
     "checkIn": {
       "sql": "UPDATE registrations SET status='CHECKED_IN' WHERE id=$1 RETURNING *"
+    },
+    "collectPayment": {
+      "sql": "UPDATE registrations SET payment_status='PAID', amount_paid=$2 WHERE id=$1 RETURNING *"
+    },
+    "recordIncome": {
+      "sql": "INSERT INTO incomes (event_id, description, amount, source) VALUES ($1, $2, $3, 'TICKET_SALE') RETURNING *"
     },
     "cancel": {
       "sql": "UPDATE registrations SET status='CANCELLED' WHERE id=$1 RETURNING *"
@@ -98,13 +104,13 @@
       "sql": "SELECT e.title, COALESCE(SUM(s.agreed_cost), 0) as projected_cost, COALESCE(SUM(p.amount), 0) as paid_amount FROM events e LEFT JOIN staffing s ON e.id = s.event_id LEFT JOIN payments p ON s.id = p.staffing_id AND p.status = 'PAID' GROUP BY e.id, e.title"
     },
     "eventFinancialDetail": {
-      "sql": "SELECT e.title, e.status, COALESCE(SUM(DISTINCT i.amount), 0) as total_income, COALESCE(SUM(DISTINCT ex.amount), 0) as total_expenses, COALESCE(SUM(DISTINCT s.agreed_cost), 0) as staff_cost, COALESCE(SUM(DISTINCT p.amount), 0) as staff_paid, (COALESCE(SUM(DISTINCT i.amount), 0) - COALESCE(SUM(DISTINCT ex.amount), 0) - COALESCE(SUM(DISTINCT s.agreed_cost), 0)) as balance FROM events e LEFT JOIN incomes i ON e.id = i.event_id LEFT JOIN expenses ex ON e.id = ex.event_id LEFT JOIN staffing s ON e.id = s.event_id LEFT JOIN payments p ON s.id = p.staffing_id AND p.status = 'PAID' WHERE e.id = $1 GROUP BY e.id"
+      "sql": "SELECT e.title, e.status, (SELECT COALESCE(SUM(amount), 0) FROM incomes WHERE event_id = e.id) as total_income, (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE event_id = e.id) as total_expenses, (SELECT COALESCE(SUM(agreed_cost), 0) FROM staffing WHERE event_id = e.id) as staff_cost, (SELECT COALESCE(SUM(p.amount), 0) FROM payments p JOIN staffing s ON p.staffing_id = s.id WHERE s.event_id = e.id AND p.status = 'PAID') as staff_paid, ((SELECT COALESCE(SUM(amount), 0) FROM incomes WHERE event_id = e.id) - (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE event_id = e.id) - (SELECT COALESCE(SUM(agreed_cost), 0) FROM staffing WHERE event_id = e.id)) as balance FROM events e WHERE e.id = $1"
     },
     "eventAttendanceDetail": {
       "sql": "SELECT e.title, COUNT(r.id) as total_registered, COUNT(CASE WHEN r.status = 'CHECKED_IN' THEN 1 END) as total_attended, CASE WHEN COUNT(r.id) > 0 THEN ROUND((COUNT(CASE WHEN r.status = 'CHECKED_IN' THEN 1 END)::numeric / COUNT(r.id)::numeric) * 100, 2) ELSE 0 END as attendance_percentage FROM events e LEFT JOIN registrations r ON e.id = r.event_id WHERE e.id = $1 GROUP BY e.id"
     },
     "globalSummary": {
-      "sql": "SELECT e.id, e.title, e.status, e.date, COALESCE(SUM(DISTINCT i.amount), 0) as total_income, COALESCE(SUM(DISTINCT ex.amount), 0) as total_expenses, COALESCE(SUM(DISTINCT s.agreed_cost), 0) as staff_cost, (COALESCE(SUM(DISTINCT i.amount), 0) - COALESCE(SUM(DISTINCT ex.amount), 0) - COALESCE(SUM(DISTINCT s.agreed_cost), 0)) as balance, COUNT(DISTINCT r.id) as total_registered, COUNT(DISTINCT CASE WHEN r.status = 'CHECKED_IN' THEN r.id END) as total_attended FROM events e LEFT JOIN incomes i ON e.id = i.event_id LEFT JOIN expenses ex ON e.id = ex.event_id LEFT JOIN staffing s ON e.id = s.event_id LEFT JOIN registrations r ON e.id = r.event_id GROUP BY e.id ORDER BY e.date DESC"
+      "sql": "SELECT e.id, e.title, e.status, e.date, (SELECT COALESCE(SUM(amount), 0) FROM incomes WHERE event_id = e.id) as total_income, (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE event_id = e.id) as total_expenses, (SELECT COALESCE(SUM(agreed_cost), 0) FROM staffing WHERE event_id = e.id) as staff_cost, ((SELECT COALESCE(SUM(amount), 0) FROM incomes WHERE event_id = e.id) - (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE event_id = e.id) - (SELECT COALESCE(SUM(agreed_cost), 0) FROM staffing WHERE event_id = e.id)) as balance, (SELECT COUNT(*) FROM registrations WHERE event_id = e.id) as total_registered, (SELECT COUNT(*) FROM registrations WHERE event_id = e.id AND status = 'CHECKED_IN') as total_attended FROM events e ORDER BY e.date DESC"
     }
   }
 }
