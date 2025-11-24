@@ -57,6 +57,8 @@ npm install
     ```bash
     node scripts/setup_db.js
     node scripts/seed_data.js
+    node scripts/run_reports_migration.js
+    node scripts/seed_reports_permissions.js
     ```
 
 ### 3. Configuración del Frontend

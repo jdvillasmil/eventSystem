@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 // @ts-ignore
 import { Events } from "../BO/Events";
 // @ts-ignore
+import { Staffing } from "../BO/Staffing";
+// @ts-ignore
 import { Registrations } from "../BO/Registrations";
+import Sidebar from "../components/Sidebar";
 
 const EventsPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -24,6 +26,11 @@ const EventsPage: React.FC = () => {
     const [showAttendeesModal, setShowAttendeesModal] = useState(false);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [loadingAttendees, setLoadingAttendees] = useState(false);
+
+    // State for Staff
+    const [eventStaff, setEventStaff] = useState<any[]>([]);
+    const [showStaffModal, setShowStaffModal] = useState(false);
+    const [loadingStaff, setLoadingStaff] = useState(false);
 
     // Form State for Events
     const [formData, setFormData] = useState<{
@@ -72,14 +79,24 @@ const EventsPage: React.FC = () => {
         }
     };
 
+    const fetchStaff = async (eventId: number) => {
+        try {
+            setLoadingStaff(true);
+            const data = await Staffing.listByEvent(eventId);
+            setEventStaff(data?.data || data || []);
+        } catch (err) {
+            console.error("Error fetching staff", err);
+            setEventStaff([]);
+        } finally {
+            setLoadingStaff(false);
+        }
+    };
+
     useEffect(() => {
         fetchEvents();
     }, []);
 
-    const handleLogout = async () => {
-        await logout();
-        navigate("/login");
-    };
+
 
     const openCreateModal = () => {
         setEditingEvent(null);
@@ -137,6 +154,12 @@ const EventsPage: React.FC = () => {
         setSelectedEvent(evt);
         setShowAttendeesModal(true);
         await fetchAttendees(evt.id);
+    };
+
+    const handleViewStaff = async (evt: any) => {
+        setSelectedEvent(evt);
+        setShowStaffModal(true);
+        await fetchStaff(evt.id);
     };
 
     const handleRegisterClick = () => {
@@ -202,26 +225,7 @@ const EventsPage: React.FC = () => {
     return (
         <div className="app-shell">
             {/* Sidebar */}
-            <aside className="app-sidebar">
-                <div className="app-sidebar-title">EventSystem</div>
-                <div className="app-sidebar-sub">
-                    Sesion: <strong>{user.name || user.username}</strong>
-                </div>
-                <nav className="app-nav">
-                    <button className="app-nav-btn" onClick={() => navigate("/dashboard")}>
-                        Dashboard
-                    </button>
-                    <button className="app-nav-btn primary" onClick={() => navigate("/events")}>
-                        Eventos
-                    </button>
-                    <button className="app-nav-btn" onClick={() => navigate("/reservations")}>
-                        📍 Reservaciones
-                    </button>
-                    <button className="app-nav-btn danger" onClick={handleLogout}>
-                        Cerrar sesion
-                    </button>
-                </nav>
-            </aside>
+            <Sidebar />
 
             <main className="app-main">
                 <div className="app-main-header">
@@ -258,6 +262,9 @@ const EventsPage: React.FC = () => {
                                 <div className="card-actions">
                                     <button className="action-btn attendees" onClick={() => handleViewAttendees(evt)}>
                                         👥 Asistentes
+                                    </button>
+                                    <button className="action-btn" style={{ background: "#8b5cf6", color: "white" }} onClick={() => handleViewStaff(evt)}>
+                                        👔 Personal
                                     </button>
                                     <button className="action-btn edit" onClick={() => handleEdit(evt)}>
                                         ✏️ Editar
@@ -453,6 +460,57 @@ const EventsPage: React.FC = () => {
                                     </button>
                                 </div>
                             </form>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Staff Modal */}
+            {showStaffModal && selectedEvent && (
+                <div className="modal-overlay" onClick={() => setShowStaffModal(false)}>
+                    <div className="attendees-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="attendees-header">
+                            <div>
+                                <h2 style={{ margin: 0 }}>Personal de {selectedEvent.title}</h2>
+                                <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                                    {eventStaff.length} {eventStaff.length === 1 ? "persona asignada" : "personas asignadas"}
+                                </p>
+                            </div>
+                            <button
+                                className="app-nav-btn"
+                                style={{ width: "auto", padding: "0.6rem 1.2rem" }}
+                                onClick={() => setShowStaffModal(false)}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+
+                        {loadingStaff ? (
+                            <p style={{ textAlign: "center", color: "#94a3b8" }}>Cargando personal...</p>
+                        ) : eventStaff.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-state-icon">👔</div>
+                                <p>No hay personal asignado aún</p>
+                                <p style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
+                                    Ve a la sección "Personal" para asignar roles.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="attendees-list">
+                                {eventStaff.map((staff) => (
+                                    <div key={staff.id} className="attendee-card">
+                                        <div className="attendee-info">
+                                            <div className="attendee-name">{staff.person_name || "Sin nombre"}</div>
+                                            <div className="attendee-email" style={{ color: "#60a5fa" }}>{staff.role_name || "Sin rol"}</div>
+                                        </div>
+                                        <div className="attendee-actions">
+                                            <span className="status-badge registered">
+                                                ${staff.agreed_cost}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </div>

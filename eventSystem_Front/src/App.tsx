@@ -5,6 +5,9 @@ import DashboardPage from "./pages/DashboardPage";
 import { PrivateRoute, PublicRoute } from "./routes/AuthRoutes";
 import EventsPage from "./pages/EventsPage";
 import ReservationsPage from "./pages/ReservationsPage";
+import StaffingPage from "./pages/StaffingPage";
+import PaymentsPage from "./pages/PaymentsPage";
+import ReportsPage from "./pages/ReportsPage";
 
 const App: React.FC = () => {
   return (
@@ -39,6 +42,30 @@ const App: React.FC = () => {
         element={
           <PrivateRoute>
             <ReservationsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/staffing"
+        element={
+          <PrivateRoute>
+            <StaffingPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/payments"
+        element={
+          <PrivateRoute>
+            <PaymentsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <PrivateRoute>
+            <ReportsPage />
           </PrivateRoute>
         }
       />

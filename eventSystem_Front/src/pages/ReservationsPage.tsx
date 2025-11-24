@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 // @ts-ignore
 import { Reservations } from "../BO/Reservations";
 // @ts-ignore
 import { Events } from "../BO/Events";
+import Sidebar from "../components/Sidebar";
 
 const ReservationsPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     const [reservations, setReservations] = useState<any[]>([]);
     const [locations, setLocations] = useState<any[]>([]);
@@ -62,10 +62,7 @@ const ReservationsPage: React.FC = () => {
         fetchEvents();
     }, []);
 
-    const handleLogout = async () => {
-        await logout();
-        navigate("/login");
-    };
+
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -131,26 +128,7 @@ const ReservationsPage: React.FC = () => {
     return (
         <div className="app-shell">
             {/* Sidebar */}
-            <aside className="app-sidebar">
-                <div className="app-sidebar-title">EventSystem</div>
-                <div className="app-sidebar-sub">
-                    Sesion: <strong>{user.name || user.username}</strong>
-                </div>
-                <nav className="app-nav">
-                    <button className="app-nav-btn" onClick={() => navigate("/dashboard")}>
-                        Dashboard
-                    </button>
-                    <button className="app-nav-btn" onClick={() => navigate("/events")}>
-                        Eventos
-                    </button>
-                    <button className="app-nav-btn primary" onClick={() => navigate("/reservations")}>
-                        📍 Reservaciones
-                    </button>
-                    <button className="app-nav-btn danger" onClick={handleLogout}>
-                        Cerrar sesion
-                    </button>
-                </nav>
-            </aside>
+            <Sidebar />
 
             <main className="app-main">
                 <div className="app-main-header">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 // Import BOs (ignoring type checks for now as they are JS files)
 // @ts-ignore
@@ -8,19 +8,11 @@ import { Events } from "../BO/Events";
 import { Registrations } from "../BO/Registrations";
 // @ts-ignore
 import { Reservations } from "../BO/Reservations";
+import Sidebar from "../components/Sidebar";
 
 const DashboardPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [output, setOutput] = useState<string>("Click a button to test...");
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } finally {
-      navigate("/login", { replace: true });
-    }
-  };
 
   const runTest = async (name: string, fn: () => Promise<any>) => {
     setOutput(`Running ${name}...`);
@@ -38,32 +30,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
-        <div className="app-sidebar-title">EventSystem</div>
-        <div className="app-sidebar-sub">
-          Sesion: <strong>{user.name || user.username}</strong>
-          <br />
-          Perfil {user.profileId}
-        </div>
-
-        <nav className="app-nav">
-          <button
-            className="app-nav-btn primary"
-            onClick={() => navigate("/dashboard")}
-          >
-            Dashboard
-          </button>
-          <button className="app-nav-btn" onClick={() => navigate("/events")}>
-            Eventos
-          </button>
-          <button className="app-nav-btn" onClick={() => navigate("/reservations")}>
-            📍 Reservaciones
-          </button>
-          <button className="app-nav-btn danger" onClick={handleLogout}>
-            Cerrar sesion
-          </button>
-        </nav>
-      </aside>
+      <Sidebar />
 
       <main className="app-main">
         <div className="app-main-header">
@@ -92,13 +59,13 @@ const DashboardPage: React.FC = () => {
             <button className="app-btn" onClick={() => runTest("Events.create", () => Events.create({ title: "Test Event " + Date.now(), date: "2025-12-01", location_id: 1, capacity: 100 }))}>
               Create Event
             </button>
-            <button className="app-btn" onClick={() => runTest("Registrations.register", () => Registrations.register({ eventId: 1, guestName: "Guest " + Date.now(), guestEmail: "guest@test.com" }))}>
+            <button className="app-btn" onClick={() => runTest("Registrations.register", () => Registrations.register({ event_id: 1, guest_name: "Guest " + Date.now(), guest_email: "guest@test.com" }))}>
               Register Guest
             </button>
-            <button className="app-btn" onClick={() => runTest("Registrations.listAttendees", () => Registrations.listAttendees(1))}>
+            <button className="app-btn" onClick={() => runTest("Registrations.listAttendees", () => Registrations.listAttendees({ event_id: 1 }))}>
               List Attendees (Evt 1)
             </button>
-            <button className="app-btn" onClick={() => runTest("Reservations.create", () => Reservations.create({ locationId: 1, eventId: 1, date: "2025-12-05" }))}>
+            <button className="app-btn" onClick={() => runTest("Reservations.create", () => Reservations.create({ location_id: 1, event_id: 1, date: "2025-12-05" }))}>
               Create Reservation
             </button>
             <button className="app-btn" onClick={() => runTest("Reservations.list", () => Reservations.list())}>
