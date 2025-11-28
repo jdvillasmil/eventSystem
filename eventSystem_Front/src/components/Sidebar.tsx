@@ -48,6 +48,24 @@ const Sidebar: React.FC = () => {
                     👷 Personal
                 </button>
                 <button
+                    className={`app-nav-btn ${isActive("/roles") ? "primary" : ""}`}
+                    onClick={() => navigate("/roles")}
+                >
+                    👔 Roles
+                </button>
+                <button
+                    className={`app-nav-btn ${isActive("/expenses") ? "primary" : ""}`}
+                    onClick={() => navigate("/expenses")}
+                >
+                    💸 Gastos
+                </button>
+                <button
+                    className={`app-nav-btn ${isActive("/attendance") ? "primary" : ""}`}
+                    onClick={() => navigate("/attendance")}
+                >
+                    ✓ Asistencia
+                </button>
+                <button
                     className={`app-nav-btn ${isActive("/payments") ? "primary" : ""}`}
                     onClick={() => navigate("/payments")}
                 >

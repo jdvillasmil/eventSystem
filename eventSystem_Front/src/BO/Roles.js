@@ -6,5 +6,14 @@ export const Roles = {
     },
     get: async (id) => {
         return callTx('Roles.get', [id]);
+    },
+    create: async (payload) => {
+        return callTx('Roles.create', [payload]);
+    },
+    update: async (payload) => {
+        return callTx('Roles.update', [payload]);
+    },
+    delete: async (payload) => {
+        return callTx('Roles.delete', [payload]);
     }
 };

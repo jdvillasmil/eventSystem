@@ -8,6 +8,9 @@ import ReservationsPage from "./pages/ReservationsPage";
 import StaffingPage from "./pages/StaffingPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import ReportsPage from "./pages/ReportsPage";
+import RolesPage from "./pages/RolesPage";
+import ExpensesPage from "./pages/ExpensesPage";
+import AttendancePage from "./pages/AttendancePage";
 
 const App: React.FC = () => {
   return (
@@ -66,6 +69,30 @@ const App: React.FC = () => {
         element={
           <PrivateRoute>
             <ReportsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/roles"
+        element={
+          <PrivateRoute>
+            <RolesPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/expenses"
+        element={
+          <PrivateRoute>
+            <ExpensesPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/attendance"
+        element={
+          <PrivateRoute>
+            <AttendancePage />
           </PrivateRoute>
         }
       />
