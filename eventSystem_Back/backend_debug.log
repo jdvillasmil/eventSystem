@@ -1,0 +1,15 @@
+2025-11-24T15:03:21.160Z: [Registrations.collectPayment] Payload: {"id":13,"amount":"80.00","event_id":14,"guest_name":"Juan Villasmil"}
+2025-11-24T15:03:21.164Z: [Registrations.collectPayment] Updating registration status...
+2025-11-24T15:03:21.166Z: [Registrations.collectPayment] Registration updated: {"id":13,"event_id":14,"user_id":1,"guest_name":"Juan Villasmil","guest_email":"ejemplo@Gmail.com","status":"CHECKED_IN","created_at":"2025-11-21T04:27:33.156Z","payment_status":"PAID","amount_paid":"80.00"}
+2025-11-24T15:03:21.166Z: [Registrations.collectPayment] Recording income for event: 14
+2025-11-24T15:03:21.169Z: [Registrations.collectPayment] Income recorded successfully
+2025-11-24T15:04:46.651Z: [Registrations.collectPayment] Payload: {"id":15,"amount":"80.00","event_id":14,"guest_name":"Carlanga"}
+2025-11-24T15:04:46.652Z: [Registrations.collectPayment] Updating registration status...
+2025-11-24T15:04:46.654Z: [Registrations.collectPayment] Registration updated: {"id":15,"event_id":14,"user_id":1,"guest_name":"Carlanga","guest_email":"carlanga@hotmail.com","status":"CHECKED_IN","created_at":"2025-11-21T04:39:34.781Z","payment_status":"PAID","amount_paid":"80.00"}
+2025-11-24T15:04:46.655Z: [Registrations.collectPayment] Recording income for event: 14
+2025-11-24T15:04:46.658Z: [Registrations.collectPayment] Income recorded successfully
+2025-11-24T15:15:02.290Z: [Registrations.collectPayment] Payload: {"id":16,"amount":"80.00","event_id":14,"guest_name":"Beto2"}
+2025-11-24T15:15:02.291Z: [Registrations.collectPayment] Updating registration status...
+2025-11-24T15:15:02.293Z: [Registrations.collectPayment] Registration updated: {"id":16,"event_id":14,"user_id":1,"guest_name":"Beto2","guest_email":"beto2@gmail.com","status":"CHECKED_IN","created_at":"2025-11-24T15:14:55.545Z","payment_status":"PAID","amount_paid":"80.00"}
+2025-11-24T15:15:02.294Z: [Registrations.collectPayment] Recording income for event: 14
+2025-11-24T15:15:02.296Z: [Registrations.collectPayment] Income recorded successfully
