@@ -12,7 +12,7 @@
       "sql": "INSERT INTO public.users (username, password_hash, profile_id)\nVALUES ($1, $2, $3)\nRETURNING id"
     },
     "getUserById": {
-      "sql": "SELECT id, username, profile_id AS \"profileId\"\nFROM public.users\nWHERE id = $1"
+      "sql": "SELECT u.id, u.username, u.profile_id AS \"profileId\", p.name AS \"profileName\", p.profile_key AS \"profileKey\" FROM public.users u LEFT JOIN public.profiles p ON u.profile_id = p.id WHERE u.id = $1"
     }
   },
   "Events": {

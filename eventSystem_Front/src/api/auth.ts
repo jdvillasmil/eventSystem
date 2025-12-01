@@ -12,6 +12,8 @@ export interface UserInfo {
   username: string;
   name?: string;
   profileId: number;
+  profileKey?: string;
+  profileName?: string;
 }
 
 export async function login(
