@@ -7,9 +7,7 @@ export const Expenses = {
     },
 
     async listByEvent(ctx, event_id) {
-        console.log('🔍 [Backend] Expenses.listByEvent called with event_id:', event_id);
         const { rows } = await executeQuery("Expenses", "listByEvent", [event_id]);
-        console.log('📊 [Backend] Expenses query returned', rows.length, 'rows');
         return { ok: true, data: rows };
     },
 

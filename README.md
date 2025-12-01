@@ -1,39 +1,82 @@
-# Sistema de Gestión de Eventos
+# eventSystem
 
-Bienvenido al repositorio del **Sistema de Gestión de Eventos**. Esta aplicación web permite administrar eventos, reservas y usuarios de manera eficiente, proporcionando una interfaz moderna y una arquitectura robusta.
+Sistema de control y gestión de eventos que permite administrar reservas de lugares, registro de personas, asignación de personal, pagos, gastos, reportes y asistencia.
 
-## 🚀 Tecnologías Utilizadas
+## 🚀 Tecnologías
 
-El proyecto está construido utilizando un stack moderno y escalable:
+### Backend
 
-### Backend (`eventSystem_Back`)
--   **Runtime**: Node.js
--   **Framework**: Express.js
--   **Base de Datos**: PostgreSQL (vía `pg` y `connect-pg-simple`)
--   **Seguridad**: `helmet`, `cors`, `express-rate-limit`
--   **Validación**: `zod`
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Base de Datos**: PostgreSQL
+- **Seguridad**: helmet, cors, express-rate-limit, express-session
+- **Validación**: Zod
+- **Autenticación**: bcryptjs
 
-### Frontend (`eventSystem_Front`)
--   **Framework**: React (v19)
--   **Build Tool**: Vite
--   **Lenguaje**: TypeScript / JavaScript
--   **Estilos**: CSS Moderno / TailwindCSS (según configuración)
--   **Routing**: React Router v7
+### Frontend
+
+- **Framework**: React 19
+- **Build Tool**: Vite
+- **Lenguaje**: TypeScript
+- **Routing**: React Router v7
+- **Estilos**: CSS Moderno
+
+---
+
+## 📐 Arquitectura
+
+El proyecto sigue un patrón de **Business Objects (BO)** con un dispatcher centralizado:
+
+### Flujo de Comunicación
+
+```
+Frontend → API Call (tx = "Objeto.metodo") → Backend /api → Dispatcher → BO → Database
+```
+
+1. **Frontend**: Los componentes React invocan métodos de los BOs del cliente
+2. **API Layer**: Las llamadas se envían al endpoint `/api` con formato `{ tx: "NombreBO.metodo", payload: {...} }`
+3. **Dispatcher**: El backend resuelve dinámicamente qué BO y método ejecutar
+4. **Business Objects**: Cada BO encapsula la lógica de negocio de un dominio específico
+5. **Database**: PostgreSQL almacena toda la información del sistema
+
+### Business Objects Disponibles
+
+**Backend** (`eventSystem_Back/src/BO/`):
+
+- `Auth.js` - Autenticación y sesiones
+- `Users.js` - Gestión de usuarios
+- `Events.js` - Eventos
+- `Reservations.js` - Reservas de lugares
+- `Registrations.js` - Registro de asistentes
+- `Staffing.js` - Asignación de personal
+- `Roles.js` - Roles de personal
+- `Payments.js` - Pagos
+- `Expenses.js` - Gastos
+- `Reports.js` - Reportes financieros y de asistencia
+- `Attendance.js` - Control de asistencia
+
+**Frontend** (`eventSystem_Front/src/BO/`):
+
+- Wrappers de cliente que se comunican con el backend vía `/api`
+
+### Seguridad
+
+- **Autenticación basada en sesiones**: express-session con almacenamiento en PostgreSQL
+- **Control de acceso**: Sistema de perfiles y permisos por usuario
+- **Protección de rutas**: Middleware de autenticación en backend y frontend
+- **Rate limiting**: Protección contra ataques de fuerza bruta
 
 ---
 
 ## 📋 Requisitos Previos
 
-Asegúrate de tener instalado lo siguiente antes de comenzar:
--   [Node.js](https://nodejs.org/) (v18 o superior recomendado)
--   [NPM](https://www.npmjs.com/) (incluido con Node.js)
--   Una instancia de PostgreSQL corriendo (local o remota)
+- [Node.js](https://nodejs.org/) v18 o superior
+- [npm](https://www.npmjs.com/) (incluido con Node.js)
+- PostgreSQL (instancia corriendo con base de datos ya configurada)
 
 ---
 
 ## 🛠️ Instalación y Configuración
-
-Sigue estos pasos para poner en marcha el proyecto en tu entorno local.
 
 ### 1. Clonar el Repositorio
 
@@ -42,61 +85,165 @@ git clone https://github.com/jdvillasmil/eventSystem.git
 cd eventSystem
 ```
 
-### 2. Configuración del Backend
-
-Navega a la carpeta del backend e instala las dependencias:
+### 2. Configurar Backend
 
 ```bash
 cd eventSystem_Back
 npm install
 ```
 
-**Configuración de Base de Datos:**
-1.  Crea un archivo `.env` en `eventSystem_Back` basado en tus credenciales de PostgreSQL.
-2.  Ejecuta los scripts de inicialización (si es la primera vez):
-    ```bash
-    node scripts/setup_db.js
-    node scripts/seed_data.js
-    node scripts/run_reports_migration.js
-    node scripts/seed_reports_permissions.js
-    ```
+**Configurar variables de entorno:**
 
-### 3. Configuración del Frontend
+Crea un archivo `.env` en `eventSystem_Back/` con el siguiente contenido:
 
-En una nueva terminal, navega a la carpeta del frontend e instala las dependencias:
+```env
+DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/nombre_base_datos
+SESSION_SECRET=tu_secreto_aleatorio_seguro
+PORT=3000
+```
+
+> **Nota**: La base de datos debe estar previamente configurada con todas las tablas y datos necesarios.
+
+**Iniciar el servidor:**
+
+```bash
+npm run dev    # Modo desarrollo con auto-reload
+# o
+npm start      # Modo producción
+```
+
+El servidor estará disponible en `http://localhost:3000`
+
+### 3. Configurar Frontend
+
+En una nueva terminal:
 
 ```bash
 cd eventSystem_Front
 npm install
 ```
 
+**Iniciar el servidor de desarrollo:**
+
+```bash
+npm run dev
+```
+
+El frontend estará disponible en `http://localhost:5173`
+
 ---
 
-## ▶️ Ejecución
+## 🔄 Flujo Principal
 
-Para iniciar la aplicación, necesitarás dos terminales abiertas (una para el backend y otra para el frontend).
+### 1. Autenticación
 
-### Iniciar Backend
-Desde `eventSystem_Back`:
-```bash
-npm run dev
+- El usuario accede a la página de login
+- Ingresa credenciales (usuario/contraseña)
+- El backend valida y crea una sesión
+- El usuario es redirigido al dashboard
+
+### 2. Navegación
+
+- **Dashboard**: Vista principal con resumen del sistema
+- **Eventos**: Gestión de eventos (crear, editar, listar)
+- **Reservaciones**: Reserva de lugares para eventos
+- **Registros**: Registro de asistentes a eventos
+- **Personal**: Asignación de staff y roles
+- **Asistencia**: Control de asistencia de registrados
+- **Reportes**: Reportes financieros y de asistencia
+- **Gastos**: Registro y seguimiento de gastos
+
+### 3. Comunicación Frontend-Backend
+
+Todas las operaciones siguen el patrón:
+
+```typescript
+// Frontend
+const result = await Events.list();
+
+// Se traduce a:
+POST /api
+{
+  "tx": "Events.list",
+  "payload": {}
+}
+
+// Backend dispatcher resuelve:
+const [boName, method] = tx.split('.');
+const BO = require(`./BO/${boName}`);
+const result = await BO[method](ctx, payload);
 ```
-*El servidor iniciará en modo vigilancia (watch mode).*
 
-### Iniciar Frontend
-Desde `eventSystem_Front`:
-```bash
-npm run dev
-```
-*Vite iniciará el servidor de desarrollo, generalmente en `http://localhost:5173`.*
+### 4. Seguridad y Permisos
+
+- Cada usuario tiene un perfil asignado
+- Los perfiles tienen permisos específicos sobre operaciones
+- El middleware de seguridad valida permisos antes de ejecutar operaciones
+- Las rutas protegidas requieren autenticación activa
 
 ---
 
 ## 📂 Estructura del Proyecto
 
--   `/eventSystem_Back`: Contiene toda la lógica del servidor, API REST, conexión a base de datos y Business Objects (BO) del lado del servidor.
--   `/eventSystem_Front`: Contiene la interfaz de usuario (SPA) construida con React, incluyendo páginas, componentes y la integración con los BOs.
+```
+eventSystem/
+├── eventSystem_Back/          # Backend (Node.js + Express)
+│   ├── src/
+│   │   ├── BO/               # Business Objects
+│   │   ├── data/             # Capa de acceso a datos
+│   │   ├── middlewares/      # Middlewares de Express
+│   │   ├── services/         # Servicios auxiliares
+│   │   ├── utils/            # Utilidades
+│   │   └── server.js         # Punto de entrada
+│   ├── configs/              # Configuraciones
+│   ├── public/               # Archivos estáticos
+│   └── package.json
+│
+└── eventSystem_Front/         # Frontend (React + Vite)
+    ├── src/
+    │   ├── BO/               # Wrappers de Business Objects
+    │   ├── components/       # Componentes React
+    │   ├── context/          # Contextos (Auth, etc.)
+    │   ├── pages/            # Páginas de la aplicación
+    │   └── main.tsx          # Punto de entrada
+    └── package.json
+```
 
-## 👥 Autores
+---
 
-Desarrollado por el equipo de **Web 2**.
+## 🧪 Desarrollo
+
+### Backend
+
+```bash
+# Modo desarrollo con auto-reload
+npm run dev
+
+# Verificar sintaxis
+node --check src/server.js
+```
+
+### Frontend
+
+```bash
+# Servidor de desarrollo
+npm run dev
+
+# Build para producción
+npm run build
+
+# Preview del build
+npm run preview
+
+# Linting
+npm run lint
+```
+
+---
+
+## Contribuidores
+
+- [Carlos Diaz](https://github.com/cgds1)
+- [Juan Villasmil](https://github.com/jdvillasmil)
+- [Alberto Martinez](https://github.com/Betico1323)
+- [Renny Zambrano](https://github.com/zambranorenn)

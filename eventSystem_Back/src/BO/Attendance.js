@@ -2,9 +2,7 @@ import { executeQuery } from "../data/DataBase.js";
 
 export const Attendance = {
     async listByEvent(ctx, event_id) {
-        console.log('🔍 [Backend] Attendance.listByEvent called with event_id:', event_id);
         const { rows } = await executeQuery("Attendance", "listByEvent", [event_id]);
-        console.log('📊 [Backend] Attendance query returned', rows.length, 'rows');
         return { ok: true, data: rows };
     },
 

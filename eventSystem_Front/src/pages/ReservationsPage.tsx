@@ -26,7 +26,6 @@ const ReservationsPage: React.FC = () => {
         try {
             setLoading(true);
             const data = await Reservations.list();
-            console.log("Reservations loaded:", data);
             setReservations(data || []);
         } catch (err) {
             console.error("Error fetching reservations", err);
@@ -39,7 +38,6 @@ const ReservationsPage: React.FC = () => {
     const fetchLocations = async () => {
         try {
             const data = await Reservations.getLocations();
-            console.log("Locations loaded:", data);
             setLocations(data || []);
         } catch (err) {
             console.error("Error fetching locations", err);
@@ -49,7 +47,6 @@ const ReservationsPage: React.FC = () => {
     const fetchEvents = async () => {
         try {
             const data = await Events.list();
-            console.log("Events loaded:", data);
             setEvents(data || []);
         } catch (err) {
             console.error("Error fetching events", err);
@@ -72,7 +69,6 @@ const ReservationsPage: React.FC = () => {
         }
 
         try {
-            console.log("Creating reservation with:", formData);
             await Reservations.create(formData);
             setShowCreateModal(false);
             setFormData({ location_id: 0, event_id: 0, date: "" });

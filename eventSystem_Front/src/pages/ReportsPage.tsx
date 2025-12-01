@@ -28,7 +28,6 @@ const ReportsPage: React.FC = () => {
     const loadEvents = async () => {
         try {
             const data = await Events.list();
-            console.log('📋 Events loaded:', data);
             // callTx already extracts .data, so data is the array directly
             setEvents(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -40,7 +39,6 @@ const ReportsPage: React.FC = () => {
     const loadGlobalSummary = async () => {
         try {
             const data = await Reports.globalSummary();
-            console.log('🌍 Global summary loaded:', data);
             // callTx already extracts .data, so data is the array directly
             setGlobalSummary(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -55,23 +53,16 @@ const ReportsPage: React.FC = () => {
         if (id) {
             setLoading(true);
             try {
-                console.log('🔍 Fetching reports for event ID:', id);
                 const [financial, attendance, expenses] = await Promise.all([
                     Reports.eventFinancialDetail(Number(id)),
                     Reports.eventAttendanceDetail(Number(id)),
                     Expenses.listByEvent(Number(id))
                 ]);
 
-                console.log('📊 Financial response:', financial);
-                console.log('📊 Attendance response:', attendance);
-                console.log('📊 Expenses response:', expenses);
-
                 // callTx already extracts .data, so we use the response directly
                 setFinancialDetail(financial || null);
                 setAttendanceDetail(attendance || null);
                 setExpensesList(Array.isArray(expenses) ? expenses : []);
-
-                console.log('✅ Data set successfully');
             } catch (err) {
                 console.error('❌ Error fetching reports:', err);
                 setFinancialDetail(null);

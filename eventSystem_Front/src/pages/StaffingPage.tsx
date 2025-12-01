@@ -40,7 +40,6 @@ const StaffingPage: React.FC = () => {
     const loadRoles = async () => {
         try {
             const data = await Roles.list();
-            console.log("Roles loaded:", data);
             setRoles(data?.data || data || []);
         } catch (err) {
             console.error("Error loading roles:", err);
