@@ -16,10 +16,14 @@ const AttendancePage: React.FC = () => {
 
     const fetchEvents = async () => {
         try {
+            console.log('📋 [AttendancePage] Fetching events list...');
             const data = await Events.list();
-            setEvents(data || []);
+            console.log('📋 [AttendancePage] Events response:', data);
+            console.log('📋 [AttendancePage] Is array:', Array.isArray(data));
+            console.log('📋 [AttendancePage] Number of events:', data?.length || 0);
+            setEvents(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error("Error fetching events", err);
+            console.error("❌ [AttendancePage] Error fetching events:", err);
             setEvents([]);
         }
     };
@@ -27,10 +31,16 @@ const AttendancePage: React.FC = () => {
     const fetchAttendees = async (eventId: number) => {
         try {
             setLoading(true);
+            console.log('🔍 Fetching attendees for event ID:', eventId);
             const data = await Attendance.listByEvent(eventId);
-            setAttendees(data || []);
+            console.log('📦 Raw data received from API:', data);
+            console.log('📊 Data type:', typeof data, 'Is array:', Array.isArray(data));
+            console.log('📊 Number of attendees:', data?.length || 0);
+
+            // Ensure we always set an array
+            setAttendees(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error("Error fetching attendees", err);
+            console.error("❌ Error fetching attendees:", err);
             setAttendees([]);
         } finally {
             setLoading(false);
@@ -42,11 +52,15 @@ const AttendancePage: React.FC = () => {
     }, []);
 
     const handleEventChange = (eventId: string) => {
+        console.log('🎯 [AttendancePage] handleEventChange called with:', eventId);
         const id = Number(eventId);
+        console.log('🎯 [AttendancePage] Converted to number:', id);
         setSelectedEventId(id);
         if (id) {
+            console.log('✅ [AttendancePage] Valid ID, fetching attendees...');
             fetchAttendees(id);
         } else {
+            console.log('⚠️ [AttendancePage] No ID selected, clearing attendees');
             setAttendees([]);
         }
     };

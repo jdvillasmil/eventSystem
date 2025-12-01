@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { Reports } from "../BO/Reports";
 // @ts-ignore
 import { Events } from "../BO/Events";
+// @ts-ignore
+import { Expenses } from "../BO/Expenses";
 import Sidebar from "../components/Sidebar";
 
 const ReportsPage: React.FC = () => {
@@ -13,6 +15,7 @@ const ReportsPage: React.FC = () => {
     const [selectedEventId, setSelectedEventId] = useState<string>("");
     const [financialDetail, setFinancialDetail] = useState<any>(null);
     const [attendanceDetail, setAttendanceDetail] = useState<any>(null);
+    const [expensesList, setExpensesList] = useState<any[]>([]);
     const [globalSummary, setGlobalSummary] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'event' | 'global'>('event');
@@ -23,13 +26,27 @@ const ReportsPage: React.FC = () => {
     }, []);
 
     const loadEvents = async () => {
-        const data = await Events.list();
-        setEvents(data?.data || data || []);
+        try {
+            const data = await Events.list();
+            console.log('📋 Events loaded:', data);
+            // callTx already extracts .data, so data is the array directly
+            setEvents(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('❌ Error loading events:', err);
+            setEvents([]);
+        }
     };
 
     const loadGlobalSummary = async () => {
-        const data = await Reports.globalSummary();
-        setGlobalSummary(data?.data || data || []);
+        try {
+            const data = await Reports.globalSummary();
+            console.log('🌍 Global summary loaded:', data);
+            // callTx already extracts .data, so data is the array directly
+            setGlobalSummary(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('❌ Error loading global summary:', err);
+            setGlobalSummary([]);
+        }
     };
 
     const handleEventChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -38,20 +55,35 @@ const ReportsPage: React.FC = () => {
         if (id) {
             setLoading(true);
             try {
-                const [financial, attendance] = await Promise.all([
+                console.log('🔍 Fetching reports for event ID:', id);
+                const [financial, attendance, expenses] = await Promise.all([
                     Reports.eventFinancialDetail(Number(id)),
-                    Reports.eventAttendanceDetail(Number(id))
+                    Reports.eventAttendanceDetail(Number(id)),
+                    Expenses.listByEvent(Number(id))
                 ]);
-                setFinancialDetail(financial?.data || financial);
-                setAttendanceDetail(attendance?.data || attendance);
+
+                console.log('📊 Financial response:', financial);
+                console.log('📊 Attendance response:', attendance);
+                console.log('📊 Expenses response:', expenses);
+
+                // callTx already extracts .data, so we use the response directly
+                setFinancialDetail(financial || null);
+                setAttendanceDetail(attendance || null);
+                setExpensesList(Array.isArray(expenses) ? expenses : []);
+
+                console.log('✅ Data set successfully');
             } catch (err) {
-                console.error(err);
+                console.error('❌ Error fetching reports:', err);
+                setFinancialDetail(null);
+                setAttendanceDetail(null);
+                setExpensesList([]);
             } finally {
                 setLoading(false);
             }
         } else {
             setFinancialDetail(null);
             setAttendanceDetail(null);
+            setExpensesList([]);
         }
     };
 
@@ -151,6 +183,88 @@ const ReportsPage: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Expense Breakdown */}
+                                {expensesList.length > 0 && (
+                                    <>
+                                        <h3 style={{ marginBottom: "1rem", marginTop: "2rem" }}>💰 Desglose de Gastos</h3>
+                                        <div style={{
+                                            background: "#1e293b",
+                                            borderRadius: "12px",
+                                            border: "1px solid #334155",
+                                            overflow: "hidden"
+                                        }}>
+                                            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                                <thead>
+                                                    <tr style={{
+                                                        background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                                                        borderBottom: "2px solid #334155"
+                                                    }}>
+                                                        <th style={{ padding: "1rem", textAlign: "left", color: "#94a3b8", fontWeight: 600 }}>Descripción</th>
+                                                        <th style={{ padding: "1rem", textAlign: "left", color: "#94a3b8", fontWeight: 600 }}>Categoría</th>
+                                                        <th style={{ padding: "1rem", textAlign: "left", color: "#94a3b8", fontWeight: 600 }}>Fecha</th>
+                                                        <th style={{ padding: "1rem", textAlign: "right", color: "#94a3b8", fontWeight: 600 }}>Monto</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {expensesList.map((expense, idx) => (
+                                                        <tr key={expense.id || idx} style={{
+                                                            borderBottom: idx < expensesList.length - 1 ? "1px solid #334155" : "none"
+                                                        }}>
+                                                            <td style={{ padding: "1rem", color: "#e2e8f0" }}>{expense.description || "Sin descripción"}</td>
+                                                            <td style={{ padding: "1rem" }}>
+                                                                <span style={{
+                                                                    padding: "0.25rem 0.75rem",
+                                                                    borderRadius: "6px",
+                                                                    fontSize: "0.85rem",
+                                                                    background: "rgba(59, 130, 246, 0.1)",
+                                                                    color: "#60a5fa",
+                                                                    border: "1px solid rgba(59, 130, 246, 0.2)"
+                                                                }}>
+                                                                    {expense.category || "General"}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: "1rem", color: "#94a3b8", fontSize: "0.9rem" }}>
+                                                                {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "N/A"}
+                                                            </td>
+                                                            <td style={{
+                                                                padding: "1rem",
+                                                                textAlign: "right",
+                                                                color: "#f87171",
+                                                                fontWeight: "bold",
+                                                                fontSize: "1.1rem"
+                                                            }}>
+                                                                ${Number(expense.amount || 0).toFixed(2)}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                    <tr style={{
+                                                        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+                                                        borderTop: "2px solid #334155"
+                                                    }}>
+                                                        <td colSpan={3} style={{
+                                                            padding: "1rem",
+                                                            fontWeight: "bold",
+                                                            color: "#e2e8f0",
+                                                            fontSize: "1.1rem"
+                                                        }}>
+                                                            Total de Gastos
+                                                        </td>
+                                                        <td style={{
+                                                            padding: "1rem",
+                                                            textAlign: "right",
+                                                            color: "#f87171",
+                                                            fontWeight: "bold",
+                                                            fontSize: "1.3rem"
+                                                        }}>
+                                                            ${expensesList.reduce((sum, exp) => sum + Number(exp.amount || 0), 0).toFixed(2)}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </>
+                                )}
 
                                 {/* Attendance Stats */}
                                 <h3 style={{ marginBottom: "1rem", marginTop: "2rem" }}>👥 Reporte de Asistencia</h3>
