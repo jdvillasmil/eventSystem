@@ -72,6 +72,15 @@
     },
     "get": {
       "sql": "SELECT * FROM roles WHERE id = $1"
+    },
+    "create": {
+      "sql": "INSERT INTO roles (name, base_cost) VALUES ($1, $2) RETURNING *"
+    },
+    "update": {
+      "sql": "UPDATE roles SET name = $2, base_cost = $3 WHERE id = $1 RETURNING *"
+    },
+    "delete": {
+      "sql": "DELETE FROM roles WHERE id = $1"
     }
   },
   "Staffing": {
@@ -94,6 +103,34 @@
     },
     "pay": {
       "sql": "UPDATE payments SET status = 'PAID', payment_date = NOW() WHERE id = $1 RETURNING *"
+    }
+  },
+  "Expenses": {
+    "list": {
+      "sql": "SELECT * FROM expenses ORDER BY expense_date DESC"
+    },
+    "listByEvent": {
+      "sql": "SELECT * FROM expenses WHERE event_id = $1 ORDER BY expense_date DESC"
+    },
+    "get": {
+      "sql": "SELECT * FROM expenses WHERE id = $1"
+    },
+    "create": {
+      "sql": "INSERT INTO expenses (event_id, description, amount, category) VALUES ($1, $2, $3, $4) RETURNING *"
+    },
+    "update": {
+      "sql": "UPDATE expenses SET event_id = $2, description = $3, amount = $4, category = $5 WHERE id = $1 RETURNING *"
+    },
+    "delete": {
+      "sql": "DELETE FROM expenses WHERE id = $1"
+    }
+  },
+  "Attendance": {
+    "listByEvent": {
+      "sql": "SELECT * FROM registrations WHERE event_id = $1 ORDER BY guest_name"
+    },
+    "markAttendance": {
+      "sql": "UPDATE registrations SET status='CHECKED_IN' WHERE id=$1 RETURNING *"
     }
   },
   "Reports": {
