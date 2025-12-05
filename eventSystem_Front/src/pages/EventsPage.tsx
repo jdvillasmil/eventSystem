@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 // @ts-ignore
 import { Events } from "../BO/Events";
 // @ts-ignore
+import { Staffing } from "../BO/Staffing";
+// @ts-ignore
 import { Registrations } from "../BO/Registrations";
+import Sidebar from "../components/Sidebar";
 
 const EventsPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -25,6 +27,11 @@ const EventsPage: React.FC = () => {
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [loadingAttendees, setLoadingAttendees] = useState(false);
 
+    // State for Staff
+    const [eventStaff, setEventStaff] = useState<any[]>([]);
+    const [showStaffModal, setShowStaffModal] = useState(false);
+    const [loadingStaff, setLoadingStaff] = useState(false);
+
     // Form State for Events
     const [formData, setFormData] = useState<{
         title: string;
@@ -32,12 +39,14 @@ const EventsPage: React.FC = () => {
         date: string;
         location_id: number;
         capacity: number | "";
+        ticket_price: number | "";
     }>({
         title: "",
         description: "",
         date: "",
         location_id: 1,
-        capacity: 100
+        capacity: 100,
+        ticket_price: 0
     });
 
     // Form State for Registration
@@ -72,18 +81,28 @@ const EventsPage: React.FC = () => {
         }
     };
 
+    const fetchStaff = async (eventId: number) => {
+        try {
+            setLoadingStaff(true);
+            const data = await Staffing.listByEvent(eventId);
+            setEventStaff(data?.data || data || []);
+        } catch (err) {
+            console.error("Error fetching staff", err);
+            setEventStaff([]);
+        } finally {
+            setLoadingStaff(false);
+        }
+    };
+
     useEffect(() => {
         fetchEvents();
     }, []);
 
-    const handleLogout = async () => {
-        await logout();
-        navigate("/login");
-    };
+
 
     const openCreateModal = () => {
         setEditingEvent(null);
-        setFormData({ title: "", description: "", date: "", location_id: 1, capacity: 100 });
+        setFormData({ title: "", description: "", date: "", location_id: 1, capacity: 100, ticket_price: 0 });
         setIsModalOpen(true);
     };
 
@@ -97,7 +116,8 @@ const EventsPage: React.FC = () => {
             description: evt.description || "",
             date: dateStr,
             location_id: evt.location_id,
-            capacity: evt.capacity
+            capacity: evt.capacity,
+            ticket_price: evt.ticket_price || 0
         });
         setIsModalOpen(true);
     };
@@ -139,6 +159,12 @@ const EventsPage: React.FC = () => {
         await fetchAttendees(evt.id);
     };
 
+    const handleViewStaff = async (evt: any) => {
+        setSelectedEvent(evt);
+        setShowStaffModal(true);
+        await fetchStaff(evt.id);
+    };
+
     const handleRegisterClick = () => {
         setShowRegisterModal(true);
         setRegisterData({ guest_name: "", guest_email: "" });
@@ -172,6 +198,30 @@ const EventsPage: React.FC = () => {
         }
     };
 
+    const handleCollectPayment = async (attendee: any) => {
+        if (!selectedEvent) return;
+        const amount = selectedEvent.ticket_price || 0;
+
+        if (amount <= 0) {
+            alert("Este evento es gratuito o no tiene precio asignado.");
+            return;
+        }
+
+        if (!window.confirm(`¿Confirmar pago de $${amount} para ${attendee.guest_name}?`)) return;
+
+        try {
+            await Registrations.collectPayment({
+                id: attendee.id,
+                amount: amount,
+                event_id: selectedEvent.id,
+                guest_name: attendee.guest_name
+            });
+            await fetchAttendees(selectedEvent.id);
+        } catch (err) {
+            alert("Error al registrar pago");
+        }
+    };
+
     const handleCancelRegistration = async (registrationId: number) => {
         try {
             await Registrations.cancel({ id: registrationId });
@@ -197,31 +247,17 @@ const EventsPage: React.FC = () => {
         return "Registrado";
     };
 
+    const getPaymentStatusBadge = (status: string) => {
+        if (status === 'PAID') return <span className="status-badge checked-in">Pagado</span>;
+        return <span className="status-badge cancelled">Pendiente</span>;
+    };
+
     if (!user) return null;
 
     return (
         <div className="app-shell">
             {/* Sidebar */}
-            <aside className="app-sidebar">
-                <div className="app-sidebar-title">EventSystem</div>
-                <div className="app-sidebar-sub">
-                    Sesion: <strong>{user.name || user.username}</strong>
-                </div>
-                <nav className="app-nav">
-                    <button className="app-nav-btn" onClick={() => navigate("/dashboard")}>
-                        Dashboard
-                    </button>
-                    <button className="app-nav-btn primary" onClick={() => navigate("/events")}>
-                        Eventos
-                    </button>
-                    <button className="app-nav-btn" onClick={() => navigate("/reservations")}>
-                        📍 Reservaciones
-                    </button>
-                    <button className="app-nav-btn danger" onClick={handleLogout}>
-                        Cerrar sesion
-                    </button>
-                </nav>
-            </aside>
+            <Sidebar />
 
             <main className="app-main">
                 <div className="app-main-header">
@@ -252,12 +288,16 @@ const EventsPage: React.FC = () => {
                                 <div className="event-meta">
                                     <span>📍 ID Lugar: {evt.location_id}</span>
                                     <span>👥 Capacidad: {evt.capacity}</span>
+                                    <span>💲 Precio: ${evt.ticket_price || 0}</span>
                                 </div>
 
                                 {/* Action Buttons */}
                                 <div className="card-actions">
                                     <button className="action-btn attendees" onClick={() => handleViewAttendees(evt)}>
                                         👥 Asistentes
+                                    </button>
+                                    <button className="action-btn" style={{ background: "#8b5cf6", color: "white" }} onClick={() => handleViewStaff(evt)}>
+                                        👔 Personal
                                     </button>
                                     <button className="action-btn edit" onClick={() => handleEdit(evt)}>
                                         ✏️ Editar
@@ -305,15 +345,28 @@ const EventsPage: React.FC = () => {
                                     required
                                 />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Capacidad</label>
-                                <input
-                                    type="number"
-                                    className="form-input"
-                                    value={formData.capacity}
-                                    onChange={e => setFormData({ ...formData, capacity: e.target.value === "" ? "" : Number(e.target.value) })}
-                                    required
-                                />
+                            <div className="form-group-row" style={{ display: "flex", gap: "1rem" }}>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label className="form-label">Capacidad</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={formData.capacity}
+                                        onChange={e => setFormData({ ...formData, capacity: e.target.value === "" ? "" : Number(e.target.value) })}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label className="form-label">Precio Ticket ($)</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={formData.ticket_price}
+                                        onChange={e => setFormData({ ...formData, ticket_price: e.target.value === "" ? "" : Number(e.target.value) })}
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                </div>
                             </div>
 
                             <div className="modal-actions">
@@ -390,6 +443,18 @@ const EventsPage: React.FC = () => {
                                             <div className="attendee-email">{attendee.guest_email || "Sin email"}</div>
                                         </div>
                                         <div className="attendee-actions">
+                                            {getPaymentStatusBadge(attendee.payment_status)}
+
+                                            {attendee.payment_status !== 'PAID' && (
+                                                <button
+                                                    className="attendee-btn"
+                                                    style={{ background: "#10b981", color: "white", border: "none" }}
+                                                    onClick={() => handleCollectPayment(attendee)}
+                                                >
+                                                    💲 Cobrar
+                                                </button>
+                                            )}
+
                                             <span className={`status-badge ${getStatusBadgeClass(attendee.status)}`}>
                                                 {getStatusText(attendee.status)}
                                             </span>
@@ -453,6 +518,57 @@ const EventsPage: React.FC = () => {
                                     </button>
                                 </div>
                             </form>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Staff Modal */}
+            {showStaffModal && selectedEvent && (
+                <div className="modal-overlay" onClick={() => setShowStaffModal(false)}>
+                    <div className="attendees-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="attendees-header">
+                            <div>
+                                <h2 style={{ margin: 0 }}>Personal de {selectedEvent.title}</h2>
+                                <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                                    {eventStaff.length} {eventStaff.length === 1 ? "persona asignada" : "personas asignadas"}
+                                </p>
+                            </div>
+                            <button
+                                className="app-nav-btn"
+                                style={{ width: "auto", padding: "0.6rem 1.2rem" }}
+                                onClick={() => setShowStaffModal(false)}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+
+                        {loadingStaff ? (
+                            <p style={{ textAlign: "center", color: "#94a3b8" }}>Cargando personal...</p>
+                        ) : eventStaff.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-state-icon">👔</div>
+                                <p>No hay personal asignado aún</p>
+                                <p style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
+                                    Ve a la sección "Personal" para asignar roles.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="attendees-list">
+                                {eventStaff.map((staff) => (
+                                    <div key={staff.id} className="attendee-card">
+                                        <div className="attendee-info">
+                                            <div className="attendee-name">{staff.person_name || "Sin nombre"}</div>
+                                            <div className="attendee-email" style={{ color: "#60a5fa" }}>{staff.role_name || "Sin rol"}</div>
+                                        </div>
+                                        <div className="attendee-actions">
+                                            <span className="status-badge registered">
+                                                ${staff.agreed_cost}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </div>

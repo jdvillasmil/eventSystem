@@ -31,5 +31,13 @@ export const Registrations = {
      */
     cancel: async (payload) => {
         return callTx('Registrations.cancel', [payload]);
+    },
+
+    /**
+     * Collect payment for registration
+     * @param {object} payload - { id, amount, event_id, guest_name }
+     */
+    collectPayment: async (payload) => {
+        return callTx('Registrations.collectPayment', [payload]);
     }
 };

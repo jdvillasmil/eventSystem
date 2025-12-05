@@ -5,7 +5,7 @@ const BO = {};
 async function ensureBO(objectName) {
   if (BO[objectName]) return BO[objectName];
   try {
-    const mod = await import(`../bo/${objectName}.js`);
+    const mod = await import(`../BO/${objectName}.js`);
     BO[objectName] = mod[objectName]; // export const X = {...}
     return BO[objectName];
   } catch (err) {

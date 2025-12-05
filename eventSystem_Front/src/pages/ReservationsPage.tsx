@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 // @ts-ignore
 import { Reservations } from "../BO/Reservations";
 // @ts-ignore
 import { Events } from "../BO/Events";
+import Sidebar from "../components/Sidebar";
 
 const ReservationsPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     const [reservations, setReservations] = useState<any[]>([]);
     const [locations, setLocations] = useState<any[]>([]);
@@ -26,7 +26,6 @@ const ReservationsPage: React.FC = () => {
         try {
             setLoading(true);
             const data = await Reservations.list();
-            console.log("Reservations loaded:", data);
             setReservations(data || []);
         } catch (err) {
             console.error("Error fetching reservations", err);
@@ -39,7 +38,6 @@ const ReservationsPage: React.FC = () => {
     const fetchLocations = async () => {
         try {
             const data = await Reservations.getLocations();
-            console.log("Locations loaded:", data);
             setLocations(data || []);
         } catch (err) {
             console.error("Error fetching locations", err);
@@ -49,7 +47,6 @@ const ReservationsPage: React.FC = () => {
     const fetchEvents = async () => {
         try {
             const data = await Events.list();
-            console.log("Events loaded:", data);
             setEvents(data || []);
         } catch (err) {
             console.error("Error fetching events", err);
@@ -62,10 +59,7 @@ const ReservationsPage: React.FC = () => {
         fetchEvents();
     }, []);
 
-    const handleLogout = async () => {
-        await logout();
-        navigate("/login");
-    };
+
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -75,7 +69,6 @@ const ReservationsPage: React.FC = () => {
         }
 
         try {
-            console.log("Creating reservation with:", formData);
             await Reservations.create(formData);
             setShowCreateModal(false);
             setFormData({ location_id: 0, event_id: 0, date: "" });
@@ -131,26 +124,7 @@ const ReservationsPage: React.FC = () => {
     return (
         <div className="app-shell">
             {/* Sidebar */}
-            <aside className="app-sidebar">
-                <div className="app-sidebar-title">EventSystem</div>
-                <div className="app-sidebar-sub">
-                    Sesion: <strong>{user.name || user.username}</strong>
-                </div>
-                <nav className="app-nav">
-                    <button className="app-nav-btn" onClick={() => navigate("/dashboard")}>
-                        Dashboard
-                    </button>
-                    <button className="app-nav-btn" onClick={() => navigate("/events")}>
-                        Eventos
-                    </button>
-                    <button className="app-nav-btn primary" onClick={() => navigate("/reservations")}>
-                        📍 Reservaciones
-                    </button>
-                    <button className="app-nav-btn danger" onClick={handleLogout}>
-                        Cerrar sesion
-                    </button>
-                </nav>
-            </aside>
+            <Sidebar />
 
             <main className="app-main">
                 <div className="app-main-header">

@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(username, password);
-      navigate("/dashboard", { replace: true });
+      navigate("/events", { replace: true });
     } catch (err) {
       if (err instanceof Error) {
         setErrorMessage(err.message);
